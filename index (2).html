@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Mizoj testlari</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg: var(--tg-theme-secondary-bg-color, #f2f3f7);
+    --card: var(--tg-theme-bg-color, #ffffff);
+    --text: var(--tg-theme-text-color, #15171c);
+    --hint: var(--tg-theme-hint-color, #8a8f99);
+    --accent: var(--tg-theme-button-color, #2f7cf6);
+    --accent-text: var(--tg-theme-button-text-color, #ffffff);
+    --line: rgba(127,127,127,.16);
+    --safro:#e8930c; --qon:#d9384a; --balgam:#2b8fd6; --savdo:#6b5bb8;
+    --radius:18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not(.tg){
+      --bg:#0f1115; --card:#1a1d24; --text:#eef0f4; --hint:#8d93a0; --accent:#4b8ff8;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+  .screen{display:none;animation:fade .25s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h1{font-size:26px;line-height:1.2;margin:8px 0 6px;letter-spacing:-.3px}
+  h2{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--hint);margin:0 0 20px}
+  .label{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--hint);margin:22px 4px 10px;font-weight:600}
+
+  .card{background:var(--card);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    border:0;border-radius:14px;padding:15px 18px;font:600 16px/1.2 inherit;font-family:inherit;
+    cursor:pointer;transition:transform .08s ease,opacity .15s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--accent);color:var(--accent-text)}
+  .btn-ghost{background:var(--card);color:var(--accent)}
+  .btn + .btn{margin-top:10px}
+
+  /* language */
+  .lang-hero{text-align:center;padding:48px 0 28px}
+  .lang-hero .orbs{font-size:44px;letter-spacing:6px;margin-bottom:14px}
+  .lang-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .lang-row .btn{padding:22px 10px;font-size:18px;background:var(--card);color:var(--text)}
+
+  /* top bar */
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .chip{border:0;background:var(--card);color:var(--accent);font:600 14px inherit;font-family:inherit;padding:8px 14px;border-radius:999px;cursor:pointer}
+
+  /* all-tests hero */
+  .hero{
+    background:linear-gradient(135deg,var(--safro),var(--qon) 35%,var(--savdo) 70%,var(--balgam));
+    color:#fff;border-radius:22px;padding:20px;margin-bottom:6px;cursor:pointer;position:relative;overflow:hidden;
+  }
+  .hero:active{transform:scale(.99)}
+  .hero h2{color:#fff;font-size:21px}
+  .hero p{margin:4px 0 14px;opacity:.92;font-size:14px}
+  .hero .go{display:inline-flex;background:rgba(255,255,255,.22);padding:9px 16px;border-radius:999px;font-weight:600;font-size:15px}
+
+  /* test cards */
+  .t-card{display:flex;align-items:center;gap:14px;cursor:pointer}
+  .t-card:active{opacity:.85}
+  .t-ico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:24px;flex:none}
+  .t-body{flex:1;min-width:0}
+  .t-name{font-weight:650;font-size:17px}
+  .t-meta{color:var(--hint);font-size:14px}
+  .t-badge{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;flex:none}
+  .arrow{color:var(--hint);font-size:22px;flex:none}
+
+  /* question */
+  .q-head{display:flex;align-items:center;gap:10px;margin:6px 0 12px}
+  .q-head .t-ico{width:38px;height:38px;font-size:19px;border-radius:12px}
+  .q-head .t-name{font-size:16px}
+  .progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:8px}
+  .progress i{display:block;height:100%;width:0;border-radius:6px;transition:width .3s ease}
+  .q-count{color:var(--hint);font-size:14px;margin-bottom:14px;display:flex;justify-content:space-between}
+  .q-card{min-height:190px;display:flex;align-items:center;padding:26px 22px}
+  .q-text{font-size:21px;line-height:1.4;font-weight:550;margin:0}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .answers .btn{padding:20px 10px;font-size:18px}
+  .btn-yes{color:#fff}
+  .btn-no{background:var(--card);color:var(--text)}
+  .q-back{margin-top:14px;text-align:center}
+  .linkbtn{background:none;border:0;color:var(--hint);font:15px inherit;font-family:inherit;cursor:pointer;padding:8px}
+
+  /* result */
+  .score{display:flex;align-items:center;gap:18px}
+  .ring{width:96px;height:96px;flex:none;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:1px;font-size:26px}
+  .ring b small{font-size:14px;color:var(--hint);font-weight:500;margin-top:8px}
+  .lvl{display:inline-block;font-weight:700;font-size:14px;padding:5px 12px;border-radius:999px;margin-top:6px}
+  .scale{display:flex;gap:6px;margin-top:16px}
+  .scale div{flex:1;text-align:center;font-size:12px;color:var(--hint);padding:7px 2px;border-radius:10px;background:var(--line)}
+  .scale div.on{color:#fff;font-weight:700}
+  .desc{font-size:16px;margin:0}
+  .recs{margin:0;padding:0;list-style:none}
+  .recs li{position:relative;padding:9px 0 9px 28px;border-top:1px solid var(--line)}
+  .recs li:first-child{border-top:0;padding-top:2px}
+  .recs li::before{content:"✓";position:absolute;left:2px;top:9px;font-weight:700;color:var(--c)}
+  .recs li:first-child::before{top:2px}
+  .card h3{margin:0 0 10px;font-size:16px}
+  .disc{font-size:13px;color:var(--hint);text-align:center;padding:4px 12px 16px;margin:0}
+  /* CTA */
+  .cta{padding:20px 18px;margin:18px 0 12px}
+  .cta h3{font-size:18px;margin:0 0 6px}
+  .cta p{margin:0 0 14px;color:var(--hint);font-size:15px}
+  .phone{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--line);
+    color:var(--text);text-decoration:none;font-weight:650;font-size:17px;margin-bottom:8px}
+  .phone:active{opacity:.75}
+  .phone .pi{width:34px;height:34px;border-radius:50%;background:#34c759;display:grid;place-items:center;flex:none}
+  .phone .pc{margin-left:auto;color:var(--hint);font-weight:500;font-size:13px}
+  .btn-tg{background:#2AABEE;color:#fff;margin-top:12px;font-size:17px;padding:16px 18px;border-radius:14px}
+  .btn-tg svg{flex:none}
+
+  /* summary */
+  .bar-row{display:flex;align-items:center;gap:10px;padding:9px 0;cursor:pointer}
+  .bar-row .nm{width:92px;font-weight:600;font-size:15px;flex:none}
+  .bar{flex:1;height:12px;background:var(--line);border-radius:8px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:8px;width:0;transition:width .6s ease}
+  .bar-row .val{width:44px;text-align:right;font-weight:700;font-size:15px;flex:none}
+  .dom{text-align:center;padding:24px 18px}
+  .dom .big{font-size:52px;line-height:1;margin-bottom:8px}
+  .dom .k{color:var(--hint);font-size:14px}
+  .dom .v{font-size:24px;font-weight:750;margin:2px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 1. Language -->
+  <section class="screen" id="s-lang">
+    <div class="lang-hero">
+      <div class="orbs">🔥❤️🌊🍂</div>
+      <h1>Mizoj testlari<br>Мизож тестлари</h1>
+      <p class="sub">Tilni tanlang · Тилни танланг</p>
+    </div>
+    <div class="lang-row">
+      <button class="btn" data-lang="lat">Lotin<br><span style="font-weight:400;font-size:13px;color:var(--hint)">O'zbekcha</span></button>
+      <button class="btn" data-lang="cyr">Кирилл<br><span style="font-weight:400;font-size:13px;color:var(--hint)">Ўзбекча</span></button>
+    </div>
+  </section>
+
+  <!-- 2. Home -->
+  <section class="screen" id="s-home">
+    <div class="top">
+      <span></span>
+      <button class="chip" id="langSwitch"></button>
+    </div>
+    <h1 id="h-title"></h1>
+    <p class="sub" id="h-sub"></p>
+    <div class="hero" id="h-all">
+      <h2 id="h-all-t"></h2>
+      <p id="h-all-p"></p>
+      <span class="go" id="h-all-go"></span>
+    </div>
+    <div class="label" id="h-or"></div>
+    <div id="h-list"></div>
+    <p class="disc" id="h-disc"></p>
+  </section>
+
+  <!-- 3. Question -->
+  <section class="screen" id="s-quiz">
+    <div class="q-head">
+      <div class="t-ico" id="q-ico"></div>
+      <div>
+        <div class="t-name" id="q-name"></div>
+        <div class="t-meta" id="q-sub"></div>
+      </div>
+    </div>
+    <div class="progress"><i id="q-bar"></i></div>
+    <div class="q-count"><span id="q-count"></span><span id="q-step"></span></div>
+    <div class="card q-card"><p class="q-text" id="q-text"></p></div>
+    <div class="answers">
+      <button class="btn btn-no" id="a-no"></button>
+      <button class="btn btn-yes" id="a-yes"></button>
+    </div>
+    <div class="q-back"><button class="linkbtn" id="q-prev"></button></div>
+  </section>
+
+  <!-- 4. Result -->
+  <section class="screen" id="s-result">
+    <div id="r-content"></div>
+  </section>
+
+  <!-- 5. Summary -->
+  <section class="screen" id="s-summary">
+    <div id="sum-content"></div>
+  </section>
+
+</div>
+
+<script>
+/* ===================== DATA (TZ) ===================== */
+const TESTS = [
+  { id:"safro", ico:"🔥", color:"var(--safro)",
+    lat:{ name:"Safro mizoji", sub:"issiq va quruq",
+      q:[
+        "Tez jahlim chiqadi, lekin tez tinchlanaman.",
+        "Issiqqa chidamayman, tez terlayman.",
+        "Ovqat kechiksa, asabiylashaman.",
+        "Qarorlarni tez va qat'iy qabul qilaman.",
+        "Boshqalarga rahbarlik qilishni yoqtiraman.",
+        "Tez-tez chanqayman, sovuq ichimliklarni yaxshi ko'raman.",
+        "Uyqum yengil va qisqa, lekin oz uxlab ham tetik bo'laman.",
+        "Achchiq yoki yog'li ovqatdan keyin jig'ildon qaynashi yoki og'izda achchiq ta'm paydo bo'ladi.",
+        "Boshqalarning sustkashligi va xatolariga chidamayman.",
+        "Tanam doim iliq, terim quruq va biroz sarg'ish."
+      ],
+      high:"Faol, shijoatli, qat'iyatli, rahbarlikka moyil. Jahldorlik, asabiylik va tez charchash xavfi bor.",
+      mid:"Sizda bu mizojning (issiq va quruq) belgilari bor, ammo ular doimiy emas. Mizojingiz aralash bo'lishi mumkin.",
+      low:"Sizda bu mizoj belgilari kam. Qisqa test natijasidagi boshqa mizoj bilan solishtiring.",
+      recs:[
+        "Salqin, suvli meva va sabzavotlar (qovun, tarvuz, bodring, uzum) mos keladi.",
+        "Juda achchiq, qovurilgan va yog'li ovqatni cheklash tavsiya etiladi.",
+        "Yetarli suv ichish va uzoq vaqt jaziramada bo'lmaslik foydali.",
+        "G'azab kelganda to'xtab, chuqur nafas olish va sekin sayr qilish yordam beradi."
+      ]},
+    cyr:{ name:"Сафро мизожи", sub:"иссиқ ва қуруқ",
+      q:[
+        "Тез жаҳлим чиқади, лекин тез тинчланаман.",
+        "Иссиққа чидамайман, тез терлайман.",
+        "Овқат кечикса, асабийлашаман.",
+        "Қарорларни тез ва қатъий қабул қиламан.",
+        "Бошқаларга раҳбарлик қилишни ёқтираман.",
+        "Тез-тез чанқайман, совуқ ичимликларни яхши кўраман.",
+        "Уйқум енгил ва қисқа, лекин оз ухлаб ҳам тетик бўламан.",
+        "Аччиқ ёки ёғли овқатдан кейин жиғилдон қайнаши ёки оғизда аччиқ таъм пайдо бўлади.",
+        "Бошқаларнинг сусткашлиги ва хатоларига чидамайман.",
+        "Танам доим илиқ, терим қуруқ ва бироз сарғиш."
+      ],
+      high:"Фаол, шижоатли, қатъиятли, раҳбарликка мойил. Жаҳлдорлик, асабийлик ва тез чарчаш хавфи бор.",
+      mid:"Сизда бу мизожнинг (иссиқ ва қуруқ) белгилари бор, аммо улар доимий эмас. Мизожингиз аралаш бўлиши мумкин.",
+      low:"Сизда бу мизож белгилари кам. Қисқа тест натижасидаги бошқа мизож билан солиштиринг.",
+      recs:[
+        "Салқин, сувли мева ва сабзавотлар (қовун, тарвуз, бодринг, узум) мос келади.",
+        "Жуда аччиқ, қовурилган ва ёғли овқатни чеклаш тавсия этилади.",
+        "Етарли сув ичиш ва узоқ вақт жазирамада бўлмаслик фойдали.",
+        "Ғазаб келганда тўхтаб, чуқур нафас олиш ва секин сайр қилиш ёрдам беради."
+      ]}
+  },
+  { id:"qon", ico:"❤️", color:"var(--qon)",
+    lat:{ name:"Qon mizoji", sub:"issiq va nam",
+      q:[
+        "Jamiyatda o'zimni erkin va quvnoq his qilaman.",
+        "Kayfiyatim tez ko'tariladi, qiyinchilikda ham umidimni yo'qotmayman.",
+        "Yuzim qizg'ish, terim iliq va nam.",
+        "Ishtahim yaxshi, mazali ovqat va shirinlikni yoqtiraman.",
+        "Yangi odamlar bilan tez til topishaman.",
+        "Fikr va rejalarim tez o'zgaradi.",
+        "Uyqum chuqur va me'yorida, yaxshi dam olaman.",
+        "Mazali ovqatni ko'rsam, ortiqcha yeb qo'yaman va to'xtay olmayman.",
+        "Xafagarchiliklarni tez unutaman, kechirimliman.",
+        "Harakatlarim tetik, yengil va quvnoq."
+      ],
+      high:"Hayotsevar, ochiq, kirishimli va xushchaqchaq. Ortiqcha ovqatlanish, jahldorlik va rejalarni oxiriga yetkazmaslik xavfi bor.",
+      mid:"Sizda bu mizojning (issiq va nam) belgilari bor, ammo ular doimiy emas. Mizojingiz aralash bo'lishi mumkin.",
+      low:"Sizda bu mizoj belgilari kam. Qisqa test natijasidagi boshqa mizoj bilan solishtiring.",
+      recs:[
+        "Me'yorda ovqatlanish, shirinlik va yog'li ovqatni cheklash foydali.",
+        "Muntazam jismoniy faollik va sport mos keladi.",
+        "Kun tartibi va yozib qo'yilgan rejalar e'tiborni jamlashga yordam beradi.",
+        "Kechasi ko'p ovqat yeyish tavsiya etilmaydi."
+      ]},
+    cyr:{ name:"Қон мизожи", sub:"иссиқ ва нам",
+      q:[
+        "Жамиятда ўзимни эркин ва қувноқ ҳис қиламан.",
+        "Кайфиятим тез кўтарилади, қийинчиликда ҳам умидимни йўқотмайман.",
+        "Юзим қизғиш, терим илиқ ва нам.",
+        "Иштаҳам яхши, мазали овқат ва ширинликни ёқтираман.",
+        "Янги одамлар билан тез тил топишаман.",
+        "Фикр ва режаларим тез ўзгаради.",
+        "Уйқум чуқур ва меъёрида, яхши дам оламан.",
+        "Мазали овқатни кўрсам, ортиқча ейиб қўяман ва тўхтай олмайман.",
+        "Хафагарчиликларни тез унутаман, кечиримлиман.",
+        "Ҳаракатларим тетик, енгил ва қувноқ."
+      ],
+      high:"Ҳаётсевар, очиқ, киришимли ва хушчақчақ. Ортиқча овқатланиш, жаҳлдорлик ва режаларни охирига етказмаслик хавфи бор.",
+      mid:"Сизда бу мизожнинг (иссиқ ва нам) белгилари бор, аммо улар доимий эмас. Мизожингиз аралаш бўлиши мумкин.",
+      low:"Сизда бу мизож белгилари кам. Қисқа тест натижасидаги бошқа мизож билан солиштиринг.",
+      recs:[
+        "Меъёрда овқатланиш, ширинлик ва ёғли овқатни чеклаш фойдали.",
+        "Мунтазам жисмоний фаоллик ва спорт мос келади.",
+        "Кун тартиби ва ёзиб қўйилган режалар эътиборни жамлашга ёрдам беради.",
+        "Кечаси кўп овқат емаслик тавсия этилади."
+      ]}
+  },
+  { id:"balgam", ico:"🌊", color:"var(--balgam)",
+    lat:{ name:"Balg'am mizoji", sub:"sovuq va nam",
+      q:[
+        "Xotirjam va bosiqman, kamdan-kam hayajonlanaman.",
+        "Harakatlarim sekin, shoshishni yoqtirmayman.",
+        "Sovuq va nam havoda o'zimni yomon his qilaman, tez shamollayman.",
+        "Uzoq va chuqur uxlayman, ertalab turish qiyin.",
+        "Kamdan-kam chanqayman.",
+        "Tanam shishishga va semirishga moyil.",
+        "Yangi ishga sekin ko'nikaman, odatiy tartibni yoqtiraman.",
+        "Hazm sust, ovqatdan keyin qornim og'irlashadi.",
+        "Janjal va nizolardan qochaman, sabrliman.",
+        "Terim sovuq va oqish, yuzim biroz shishinqirab turadi."
+      ],
+      high:"Xotirjam, sabrli, bosiq va ishonchli. Sustlik, ortiqcha vazn va befarqlik xavfi bor.",
+      mid:"Sizda bu mizojning (sovuq va nam) belgilari bor, ammo ular doimiy emas. Mizojingiz aralash bo'lishi mumkin.",
+      low:"Sizda bu mizoj belgilari kam. Qisqa test natijasidagi boshqa mizoj bilan solishtiring.",
+      recs:[
+        "Iliq, yengil taomlar va ziravorlar (zira, zanjabil, qora murch) mos keladi.",
+        "Sovuq ichimliklar va sut mahsulotlarini me'yoridan oshirmaslik tavsiya etiladi.",
+        "Kundalik harakat, tez yurish va isituvchi mashqlar foydali.",
+        "Haddan ortiq uxlamaslik va aniq kun tartibiga rioya qilish yordam beradi."
+      ]},
+    cyr:{ name:"Балғам мизожи", sub:"совуқ ва нам",
+      q:[
+        "Хотиржам ва босиқман, камдан-кам ҳаяжонланаман.",
+        "Ҳаракатларим секин, шошишни ёқтирмайман.",
+        "Совуқ ва нам ҳавода ўзимни ёмон ҳис қиламан, тез шамоллайман.",
+        "Узоқ ва чуқур ухлайман, эрталаб туриш қийин.",
+        "Камдан-кам чанқайман.",
+        "Танам шишишга ва семиришга мойил.",
+        "Янги ишга секин кўникаман, одатий тартибни ёқтираман.",
+        "Ҳазм суст, овқатдан кейин қорним оғирлашади.",
+        "Жанжал ва низолардан қочаман, сабрлиман.",
+        "Терим совуқ ва оқиш, юзим бироз шишинқираб туради."
+      ],
+      high:"Хотиржам, сабрли, босиқ ва ишончли. Сустлик, ортиқча вазн ва бефарқлик хавфи бор.",
+      mid:"Сизда бу мизожнинг (совуқ ва нам) белгилари бор, аммо улар доимий эмас. Мизожингиз аралаш бўлиши мумкин.",
+      low:"Сизда бу мизож белгилари кам. Қисқа тест натижасидаги бошқа мизож билан солиштиринг.",
+      recs:[
+        "Илиқ, енгил таомлар ва зираворлар (зира, занжабил, қора мурч) мос келади.",
+        "Совуқ ичимликлар ва сут маҳсулотларини меъёридан оширмаслик тавсия этилади.",
+        "Кундалик ҳаракат, тез юриш ва иситувчи машқлар фойдали.",
+        "Ҳаддан ортиқ ухламаслик ва аниқ кун тартибига риоя қилиш ёрдам беради."
+      ]}
+  },
+  { id:"savdo", ico:"🍂", color:"var(--savdo)",
+    lat:{ name:"Savdo mizoji", sub:"sovuq va quruq",
+      q:[
+        "Ko'p o'ylayman, bezovtalik va xayolga berilishga moyilman.",
+        "Sovuq va quruq shamolda terim yorilib ketadi, qo'l-oyog'im muzlaydi.",
+        "Uyqum bezovta, tushlar ko'p, tez-tez uyqusizlik bo'ladi.",
+        "Ishtaham beqaror, ba'zan umuman yegim kelmaydi.",
+        "Qabziyat va qorin dam bo'lishiga moyilman.",
+        "Qaror qilishdan oldin uzoq ikkilanaman.",
+        "Tanam ozg'in, terim quruq, lablarim va tovonlarim yoriladi.",
+        "Yolg'izlik va sokinlikni yoqtiraman, davrada tez charchayman.",
+        "Xato qilishdan qo'rqaman, o'zimni qattiq tanqid qilaman.",
+        "Xafagarchilikni uzoq unutolmayman, hammasini ichimga yutaman."
+      ],
+      high:"Chuqur fikrlaydi, mas'uliyatli, puxta va ehtiyotkor. Xavotir, uyqusizlik va qabziyatga moyillik xavfi bor.",
+      mid:"Sizda bu mizojning (sovuq va quruq) belgilari bor, ammo ular doimiy emas. Mizojingiz aralash bo'lishi mumkin.",
+      low:"Sizda bu mizoj belgilari kam. Qisqa test natijasidagi boshqa mizoj bilan solishtiring.",
+      recs:[
+        "Iliq, yumshoq va moyli taomlar (sho'rva, bo'tqa, quritilgan mevalar) mos keladi.",
+        "Muntazam kun tartibi va yetarli uyqu muhim.",
+        "Qabziyatda ko'p suyuqlik va kletchatkali mahsulotlar foydali.",
+        "Xavotirlarni yozib borish, yengil mashqlar va yaqinlar bilan suhbat yordam beradi."
+      ]},
+    cyr:{ name:"Савдо мизожи", sub:"совуқ ва қуруқ",
+      q:[
+        "Кўп ўйлайман, безовталик ва хаёлга берилишга мойилман.",
+        "Совуқ ва қуруқ шамолда терим ёрилиб кетади, қўл-оёғим музлайди.",
+        "Уйқум безовта, тушлар кўп, тез-тез уйқусизлик бўлади.",
+        "Иштаҳам беқарор, баъзан умуман егим келмайди.",
+        "Қабзият ва қорин дам бўлишига мойилман.",
+        "Қарор қилишдан олдин узоқ иккиланаман.",
+        "Танам озғин, терим қуруқ, лабларим ва товонларим ёрилади.",
+        "Ёлғизлик ва сокинликни ёқтираман, даврада тез чарчайман.",
+        "Хато қилишдан қўрқаман, ўзимни қаттиқ танқид қиламан.",
+        "Хафагарчиликни узоқ унута олмайман, ҳаммасини ичимга ютаман."
+      ],
+      high:"Чуқур фикрлайди, масъулиятли, пухта ва эҳтиёткор. Хавотир, уйқусизлик ва қабзиятга мойиллик хавфи бор.",
+      mid:"Сизда бу мизожнинг (совуқ ва қуруқ) белгилари бор, аммо улар доимий эмас. Мизожингиз аралаш бўлиши мумкин.",
+      low:"Сизда бу мизож белгилари кам. Қисқа тест натижасидаги бошқа мизож билан солиштиринг.",
+      recs:[
+        "Илиқ, юмшоқ ва мойли таомлар (шўрва, бўтқа, қуритилган мевалар) мос келади.",
+        "Мунтазам кун тартиби ва етарли уйқу муҳим.",
+        "Қабзиятда кўп суюқлик ва клетчаткали маҳсулотлар фойдали.",
+        "Хавотирларни ёзиб бориш, енгил машқлар ва яқинлар билан суҳбат ёрдам беради."
+      ]}
+  }
+];
+
+/* ===================== UI TEXTS ===================== */
+const UI = {
+  lat:{
+    title:"Mizoj testlari", sub:"Tabiatingiz va tanangizga xos mizojni aniqlang",
+    allT:"Barcha 4 testni topshirish", allP:"40 savol · ~5 daqiqa · ustun mizojingizni ko'rsatadi", allGo:"Boshlash →",
+    or:"Yoki bitta testni tanlang", q10:"10 savol", switchTo:"Кирилл",
+    yes:"Ha", no:"Yo'q", prev:"← Oldingi savol", question:"Savol", test:"Test",
+    yesCount:"«Ha» javoblari soni", levels:{low:"Past",mid:"O'rta",high:"Yuqori"}, level:"daraja",
+    resTitle:"Natija", recsTitle:"Umumiy tavsiyalar",
+    next:"Keyingi test →", toSummary:"Umumiy natijani ko'rish →", retry:"Qayta topshirish", home:"Bosh sahifa",
+    sumTitle:"Umumiy natija", sumSub:"4 ta test bo'yicha «Ha» javoblari", dominant:"Sizda ustun mizoj",
+    mixed:"Sizda aralash mizoj", none:"Hech bir mizoj belgilari yaqqol ustun emas",
+    noneHint:"Natijalaringiz past darajada. Testni boshqa vaqtda, xotirjam holatda qayta topshirib ko'ring.",
+    tapHint:"Batafsil ko'rish uchun mizoj ustiga bosing", allRes:"Barcha natijalar",
+    last:"Oxirgi natija",
+    ctaT:"Bepul konsultatsiya oling", ctaP:"Natijangiz bo'yicha batafsil maslahat olish uchun qo'ng'iroq qiling yoki Telegramda yozing.",
+    call:"Qo'ng'iroq", tgBtn:"Telegramda yozish",
+    disc:"Bu test tashxis emas va umumiy ma'lumot xarakteriga ega. Sog'liq masalalarida shifokorga murojaat qiling."
+  },
+  cyr:{
+    title:"Мизож тестлари", sub:"Табиатингиз ва танангизга хос мизожни аниқланг",
+    allT:"Барча 4 тестни топшириш", allP:"40 савол · ~5 дақиқа · устун мизожингизни кўрсатади", allGo:"Бошлаш →",
+    or:"Ёки битта тестни танланг", q10:"10 савол", switchTo:"Lotin",
+    yes:"Ҳа", no:"Йўқ", prev:"← Олдинги савол", question:"Савол", test:"Тест",
+    yesCount:"«Ҳа» жавоблари сони", levels:{low:"Паст",mid:"Ўрта",high:"Юқори"}, level:"даража",
+    resTitle:"Натижа", recsTitle:"Умумий тавсиялар",
+    next:"Кейинги тест →", toSummary:"Умумий натижани кўриш →", retry:"Қайта топшириш", home:"Бош саҳифа",
+    sumTitle:"Умумий натижа", sumSub:"4 та тест бўйича «Ҳа» жавоблари", dominant:"Сизда устун мизож",
+    mixed:"Сизда аралаш мизож", none:"Ҳеч бир мизож белгилари яққол устун эмас",
+    noneHint:"Натижаларингиз паст даражада. Тестни бошқа вақтда, хотиржам ҳолатда қайта топшириб кўринг.",
+    tapHint:"Батафсил кўриш учун мизож устига босинг", allRes:"Барча натижалар",
+    last:"Охирги натижа",
+    ctaT:"Бепул консультация олинг", ctaP:"Натижангиз бўйича батафсил маслаҳат олиш учун қўнғироқ қилинг ёки Телеграмда ёзинг.",
+    call:"Қўнғироқ", tgBtn:"Телеграмда ёзиш",
+    disc:"Бу тест ташхис эмас ва умумий маълумот хусусиятига эга. Соғлиқ масалаларида шифокорга мурожаат қилинг."
+  }
+};
+
+/* ===================== KONTAKTLAR (shu yerda o'zgartiring) ===================== */
+const CONTACT = {
+  phones: ["+998942596004", "+998942597004"],
+  telegram: "https://t.me/drmamura"
+};
+
+/* ===================== TELEGRAM ===================== */
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg && tg.initData !== undefined) {
+  document.documentElement.classList.add("tg");
+  tg.ready(); tg.expand();
+  try { tg.setHeaderColor("secondary_bg_color"); tg.setBackgroundColor("secondary_bg_color"); } catch(e){}
+}
+const haptic = (t) => { try { tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(t||"light"); } catch(e){} };
+const notify = (t) => { try { tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred(t||"success"); } catch(e){} };
+let backHandler = null;
+function setBack(fn){
+  if (!tg || !tg.BackButton) return;
+  if (backHandler) tg.BackButton.offClick(backHandler);
+  backHandler = fn;
+  if (fn) { tg.BackButton.onClick(fn); tg.BackButton.show(); } else tg.BackButton.hide();
+}
+
+/* ===================== STORAGE ===================== */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("mizoj_"+k); return v===null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem("mizoj_"+k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ===================== STATE ===================== */
+const S = { lang: store.get("lang", null), queue:[], qi:0, ti:0, answers:[], session:{}, mode:"single" };
+const $ = (id) => document.getElementById(id);
+const T = () => UI[S.lang];
+const testById = (id) => TESTS.find(t => t.id === id);
+const levelOf = (n) => n <= 4 ? "low" : n <= 7 ? "mid" : "high";
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+/* ===================== LANGUAGE ===================== */
+document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => {
+  haptic(); S.lang = b.dataset.lang; store.set("lang", S.lang); renderHome();
+});
+$("langSwitch").onclick = () => {
+  haptic(); S.lang = S.lang === "lat" ? "cyr" : "lat"; store.set("lang", S.lang); renderHome();
+};
+
+/* ===================== HOME ===================== */
+function renderHome(){
+  const u = T(); const results = store.get("results", {});
+  document.documentElement.lang = S.lang === "cyr" ? "uz-Cyrl" : "uz";
+  document.title = u.title;
+  $("langSwitch").textContent = u.switchTo;
+  $("h-title").textContent = u.title;
+  $("h-sub").textContent = u.sub;
+  $("h-all-t").textContent = u.allT;
+  $("h-all-p").textContent = u.allP;
+  $("h-all-go").textContent = u.allGo;
+  $("h-or").textContent = u.or;
+  $("h-disc").textContent = u.disc;
+  $("h-list").innerHTML = TESTS.map(t => {
+    const d = t[S.lang]; const r = results[t.id];
+    const badge = (r !== undefined)
+      ? `<span class="t-badge" style="background:color-mix(in srgb, ${t.color} 16%, transparent);color:${t.color}">${r}/10</span>`
+      : `<span class="arrow">›</span>`;
+    return `<div class="card t-card" data-test="${t.id}">
+      <div class="t-ico" style="background:color-mix(in srgb, ${t.color} 15%, transparent)">${t.ico}</div>
+      <div class="t-body"><div class="t-name">${d.name}</div><div class="t-meta">${d.sub} · ${u.q10}</div></div>
+      ${badge}</div>`;
+  }).join("");
+  document.querySelectorAll("[data-test]").forEach(c => c.onclick = () => { haptic(); start([c.dataset.test], "single"); });
+  setBack(null);
+  show("s-home");
+}
+$("h-all").onclick = () => { haptic("medium"); start(TESTS.map(t => t.id), "all"); };
+
+/* ===================== QUIZ ===================== */
+function start(queue, mode){
+  S.queue = queue; S.mode = mode; S.ti = 0; S.session = {};
+  beginTest();
+}
+function beginTest(){ S.qi = 0; S.answers = []; renderQuestion(); }
+
+function renderQuestion(){
+  const u = T(); const t = testById(S.queue[S.ti]); const d = t[S.lang];
+  $("q-ico").textContent = t.ico;
+  $("q-ico").style.background = `color-mix(in srgb, ${t.color} 15%, transparent)`;
+  $("q-name").textContent = d.name;
+  $("q-sub").textContent = d.sub;
+  $("q-bar").style.background = t.color;
+  $("q-bar").style.width = (S.qi / 10 * 100) + "%";
+  $("q-count").textContent = `${u.question} ${S.qi + 1} / 10`;
+  $("q-step").textContent = S.queue.length > 1 ? `${u.test} ${S.ti + 1} / ${S.queue.length}` : "";
+  $("q-text").textContent = d.q[S.qi];
+  $("a-yes").textContent = u.yes;
+  $("a-no").textContent = u.no;
+  $("a-yes").style.background = t.color;
+  $("q-prev").textContent = u.prev;
+  $("q-prev").style.visibility = S.qi > 0 ? "visible" : "hidden";
+  setBack(goBack);
+  show("s-quiz");
+}
+function answer(v){
+  haptic(v ? "medium" : "light");
+  S.answers[S.qi] = v;
+  if (S.qi < 9) { S.qi++; renderQuestion(); }
+  else finishTest();
+}
+function goBack(){
+  haptic();
+  if (S.qi > 0) { S.qi--; renderQuestion(); }
+  else renderHome();
+}
+$("a-yes").onclick = () => answer(1);
+$("a-no").onclick = () => answer(0);
+$("q-prev").onclick = goBack;
+
+function finishTest(){
+  const t = testById(S.queue[S.ti]);
+  const score = S.answers.reduce((a,b) => a + b, 0);
+  S.session[t.id] = score;
+  const results = store.get("results", {}); results[t.id] = score; store.set("results", results);
+  notify("success");
+  renderResult(t.id, score, true);
+}
+
+/* ===================== RESULT ===================== */
+function ring(score, color){
+  const r = 42, c = 2 * Math.PI * r, off = c * (1 - score / 10);
+  return `<div class="ring"><svg width="96" height="96" viewBox="0 0 96 96">
+    <circle cx="48" cy="48" r="${r}" fill="none" stroke="var(--line)" stroke-width="9"/>
+    <circle cx="48" cy="48" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg>
+    <b>${score}<small>/10</small></b></div>`;
+}
+function resultBlock(id, score){
+  const u = T(); const t = testById(id); const d = t[S.lang]; const lv = levelOf(score);
+  const ranges = { low:"0–4", mid:"5–7", high:"8–10" };
+  return `
+    <div class="card">
+      <div class="score">
+        ${ring(score, t.color)}
+        <div>
+          <div class="t-meta">${u.resTitle}</div>
+          <h2>${t.ico} ${d.name}</h2>
+          <div class="t-meta">${d.sub} · ${u.yesCount}: ${score}</div>
+          <span class="lvl" style="background:color-mix(in srgb, ${t.color} 16%, transparent);color:${t.color}">${u.levels[lv]} ${u.level} (${ranges[lv]})</span>
+        </div>
+      </div>
+      <div class="scale">
+        ${["low","mid","high"].map(k => `<div class="${k===lv?"on":""}" style="${k===lv?`background:${t.color}`:""}">${u.levels[k]}<br>${ranges[k]}</div>`).join("")}
+      </div>
+    </div>
+    <div class="card"><p class="desc">${d[lv]}</p></div>
+    ${lv !== "low" ? `<div class="card"><h3>${u.recsTitle}</h3><ul class="recs">${d.recs.map(r => `<li style="--c:${t.color}">${r}</li>`).join("")}</ul></div>` : ""}
+  `;
+}
+function fmtPhone(p){ const d=p.replace(/\D/g,""); return `+${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5,8)} ${d.slice(8,10)} ${d.slice(10,12)}`; }
+function ctaBlock(){
+  const u = T();
+  const phoneIco = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>`;
+  const tgIco = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M21.9 4.3 18.7 19.4c-.24 1.07-.87 1.33-1.76.83l-4.86-3.58-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.02-8.15c.39-.35-.09-.54-.6-.2L6.37 13.1l-4.8-1.5c-1.04-.33-1.06-1.04.22-1.54L20.55 2.8c.87-.32 1.63.2 1.35 1.5z"/></svg>`;
+  return `<div class="card cta">
+    <h3>📞 ${u.ctaT}</h3>
+    <p>${u.ctaP}</p>
+    ${CONTACT.phones.map(p => `<a class="phone" href="tel:${p}"><span class="pi">${phoneIco}</span>${fmtPhone(p)}<span class="pc">${u.call}</span></a>`).join("")}
+    <button class="btn btn-tg" data-tglink>${tgIco}${u.tgBtn}</button>
+  </div>`;
+}
+function bindCta(root){
+  root.querySelectorAll("[data-tglink]").forEach(b => b.onclick = () => {
+    haptic("medium");
+    const url = CONTACT.telegram;
+    const user = url.replace(/^https?:\/\/t\.me\//, "").replace(/[/?#].*$/, "");
+    const insideTelegram = !!(tg && tg.initData);
+    if (insideTelegram && tg.openTelegramLink) {
+      // Telegram ichida: chat darhol ochiladi, tasdiqlash oynasisiz
+      tg.openTelegramLink("https://t.me/" + user);
+    } else {
+      // Brauzerda: to'g'ridan-to'g'ri Telegram ilovasini ochish, bo'lmasa t.me sahifasi
+      window.location.href = "tg://resolve?domain=" + user;
+      setTimeout(() => { if (!document.hidden) window.location.href = "https://t.me/" + user; }, 1200);
+    }
+  });
+}
+
+function renderResult(id, score, fresh){
+  const u = T();
+  const isAll = S.mode === "all";
+  const isLast = S.ti >= S.queue.length - 1;
+  let actions = "";
+  if (fresh && isAll && !isLast) actions = `<button class="btn btn-primary" id="r-next" style="background:${testById(S.queue[S.ti+1]).color}">${u.next}</button>`;
+  else if (fresh && isAll && isLast) actions = `<button class="btn btn-primary" id="r-sum">${u.toSummary}</button>`;
+  else if (!fresh) actions = `<button class="btn btn-primary" id="r-back">← ${u.sumTitle}</button>`;
+  if (!isAll || !fresh) actions += `<button class="btn btn-ghost" id="r-retry">${u.retry}</button>`;
+  actions += `<button class="btn btn-ghost" id="r-home">${u.home}</button>`;
+
+  const showCta = !(fresh && isAll && !isLast);
+  $("r-content").innerHTML = resultBlock(id, score) + (showCta ? ctaBlock() : "") + actions + `<p class="disc" style="margin-top:14px">${u.disc}</p>`;
+  bindCta($("r-content"));
+
+  const b = (x, fn) => { const el = $(x); if (el) el.onclick = () => { haptic(); fn(); }; };
+  b("r-next", () => { S.ti++; beginTest(); });
+  b("r-sum", renderSummary);
+  b("r-back", renderSummary);
+  b("r-retry", () => start([id], "single"));
+  b("r-home", renderHome);
+  setBack(fresh ? renderHome : renderSummary);
+  show("s-result");
+}
+
+/* ===================== SUMMARY ===================== */
+function renderSummary(){
+  const u = T(); const sc = S.session;
+  const max = Math.max(...TESTS.map(t => sc[t.id] ?? 0));
+  const top = TESTS.filter(t => sc[t.id] === max);
+  let dom;
+  if (max <= 4) {
+    dom = `<div class="card dom"><div class="big">⚖️</div><div class="v" style="font-size:19px">${u.none}</div><div class="k">${u.noneHint}</div></div>`;
+  } else if (top.length === 1) {
+    const t = top[0], d = t[S.lang];
+    dom = `<div class="card dom" style="border:2px solid ${t.color}"><div class="big">${t.ico}</div>
+      <div class="k">${u.dominant}</div><div class="v" style="color:${t.color}">${d.name}</div>
+      <div class="k">${d.sub} · ${max}/10 · ${u.levels[levelOf(max)]} ${u.level}</div></div>`;
+  } else {
+    dom = `<div class="card dom"><div class="big">${top.map(t => t.ico).join("")}</div>
+      <div class="k">${u.mixed}</div><div class="v">${top.map(t => t[S.lang].name).join(" + ")}</div>
+      <div class="k">${max}/10 · ${u.levels[levelOf(max)]} ${u.level}</div></div>`;
+  }
+  const bars = TESTS.map(t => `
+    <div class="bar-row" data-detail="${t.id}">
+      <div class="nm">${t.ico} ${t[S.lang].name.split(" ")[0]}</div>
+      <div class="bar"><i style="background:${t.color}" data-w="${(sc[t.id]??0)*10}"></i></div>
+      <div class="val">${sc[t.id] ?? 0}/10</div>
+    </div>`).join("");
+
+  // detailed block for leading temperament(s) with recommendations
+  const details = (max > 4) ? top.map(t => resultBlock(t.id, max)).join("") : "";
+
+  $("sum-content").innerHTML = `
+    <h1>${u.sumTitle}</h1><p class="sub">${u.sumSub}</p>
+    ${dom}
+    <div class="label">${u.allRes}</div>
+    <div class="card">${bars}<div class="t-meta" style="margin-top:6px;text-align:center">${u.tapHint}</div></div>
+    ${details}
+    ${ctaBlock()}
+    <button class="btn btn-ghost" id="sum-retry">${u.retry}</button>
+    <button class="btn btn-ghost" id="sum-home">${u.home}</button>
+    <p class="disc" style="margin-top:14px">${u.disc}</p>`;
+  requestAnimationFrame(() => setTimeout(() =>
+    document.querySelectorAll(".bar i").forEach(i => i.style.width = i.dataset.w + "%"), 60));
+  document.querySelectorAll("[data-detail]").forEach(r => r.onclick = () => {
+    haptic(); const id = r.dataset.detail; renderResult(id, sc[id] ?? 0, false);
+  });
+  bindCta($("sum-content"));
+  $("sum-retry").onclick = () => { haptic(); start(TESTS.map(t => t.id), "all"); };
+  $("sum-home").onclick = () => { haptic(); renderHome(); };
+  setBack(renderHome);
+  show("s-summary");
+}
+
+/* ===================== INIT ===================== */
+if (S.lang && UI[S.lang]) renderHome(); else show("s-lang");
+</script>
+</body>
+</html>
